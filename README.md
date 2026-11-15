@@ -25,8 +25,8 @@ npm run lint
 ## Layout
 
 ```
-app/                    the routes: /, /hub, /mods, /mods/<id>, /mods/submit, /mods/mine, /mods/policy, /releases,
-                        /benchmarks, /stats, /docs, /docs/<page>, /privacy, /apply, and the staff's
+app/                    the routes: /, /download, /hub, /mods, /mods/<id>, /mods/submit, /mods/mine, /mods/policy,
+                        /releases, /benchmarks, /stats, /docs, /docs/<page>, /privacy, /apply, and the staff's
                         pages inside the hub: /hub/team, /hub/mod, /hub/sign-in, /hub/setup, /hub/staff-help
                         (the old /staff/* addresses redirect there; /hub/mod has a Cases tab: Kira's numbered mod
                         cases and appeals), and /hub/appeal: the appeal form for people banned from the Discord
@@ -73,7 +73,8 @@ npm run perf:import -- /path/to/horizon /path/to/perf-wasm-output
 npm test && npm run typecheck && npm run lint && npm run build
 ```
 
-Import the wasm and its wrapper together. `npm test` runs the viewer's unit tests (`lib/perf/**/*.test.ts`).
+Import the wasm and its wrapper together. `npm test` runs the viewer's unit tests (`lib/perf/**/*.test.ts`) and the
+site's (`components/*.test.ts`).
 
 ### Sharing a capture
 

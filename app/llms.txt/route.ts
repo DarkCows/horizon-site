@@ -3,6 +3,7 @@ import { DISCORD_URL, GITHUB_URL } from "@/components/links";
 import { absolute, SITE_URL } from "@/components/site";
 
 const PAGES = [
+  ["Download", "/download", "the Horizon launcher for Windows, macOS and Linux, chosen for the visitor's computer"],
   ["Download and releases", "/releases", "every game, launcher and nightly release, with notes and downloads"],
   ["Benchmarks", "/benchmarks", "Horizon against Minecraft: Java Edition 26.3 on a ThinkPad, a Mac mini and a gaming desktop"],
   ["Mods", "/mods", "mods, modpacks and resource packs made for Horizon, each reviewed before it was listed"],

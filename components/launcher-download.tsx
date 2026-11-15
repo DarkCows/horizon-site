@@ -2,39 +2,37 @@
 
 import { useSyncExternalStore, type ReactNode } from "react";
 import type { DesktopOs, LauncherBuild, LauncherTarget } from "@/components/github-releases";
+import { desktopOs, launcherTarget, megabytes, type Arch } from "@/components/launcher-platform";
 import { DOWNLOAD_URL } from "@/components/links";
 
 function detect(): DesktopOs | null {
-  const ua = navigator.userAgent;
-  if (/Android|iPhone|iPad|iPod/i.test(ua)) return null;
-  if (/Windows/i.test(ua)) return "windows";
-  if (/Macintosh|Mac OS X/i.test(ua)) return navigator.maxTouchPoints > 1 ? null : "macos";
-  if (/Linux|X11|CrOS/i.test(ua)) return "linux";
-  return null;
+  return desktopOs(navigator.userAgent, navigator.maxTouchPoints);
 }
 
 // The processor, where the browser says (Chromium's client hints; the user agent string says Intel on every Mac and
 // x64 on Windows on ARM). Read once, in the browser only; nothing leaves the page.
-type Arch = "arm" | "x86" | null;
 let arch: Arch = null;
-let asked = false;
+let answer: Promise<Arch> | null = null;
 const archListeners = new Set<() => void>();
 type HintedNavigator = Navigator & {
   userAgentData?: { getHighEntropyValues(hints: string[]): Promise<{ architecture?: string }> };
 };
 
+// Settles once, with null when the browser doesn't say.
+export function askArch(): Promise<Arch> {
+  answer ??= ((navigator as HintedNavigator).userAgentData?.getHighEntropyValues(["architecture"]) ?? Promise.resolve({ architecture: undefined }))
+    .then(({ architecture }): Arch => (architecture === "arm" ? "arm" : architecture === "x86" ? "x86" : null))
+    .catch(() => null);
+  return answer;
+}
+
 function subscribeArch(changed: () => void) {
   archListeners.add(changed);
-  if (!asked) {
-    asked = true;
-    (navigator as HintedNavigator).userAgentData
-      ?.getHighEntropyValues(["architecture"])
-      .then(({ architecture }) => {
-        arch = architecture === "arm" ? "arm" : architecture === "x86" ? "x86" : null;
-        archListeners.forEach((listener) => listener());
-      })
-      .catch(() => {});
-  }
+  askArch().then((settled) => {
+    if (settled === arch) return;
+    arch = settled;
+    archListeners.forEach((listener) => listener());
+  });
   return () => {
     archListeners.delete(changed);
   };
@@ -46,16 +44,10 @@ function useDesktopOs() {
   return useSyncExternalStore(never, detect, () => null);
 }
 
-// This system's launcher: an Intel Mac gets the x64 disk image and Windows on ARM the ARM64 setup when the browser
-// names the processor. Otherwise a Mac gets Apple Silicon's and Windows x64's, which Windows on ARM also runs.
 function useLauncherTarget(os: DesktopOs | null): LauncherTarget | null {
   const processor = useSyncExternalStore(subscribeArch, () => arch, () => null);
-  if (os === "macos" && processor === "x86") return "macos-x64";
-  if (os === "windows" && processor === "arm") return "windows-arm64";
-  return os;
+  return launcherTarget(os, processor);
 }
-
-const megabytes = (bytes: number) => `${(bytes / 1e6).toFixed(1)} MB`;
 
 export function LauncherLink({
   build,
