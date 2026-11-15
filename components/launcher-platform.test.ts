@@ -41,9 +41,9 @@ test("a desktop gets its own launcher", () => {
   assert.equal(file(UA.linux, "x86"), "horizon-launcher-linux-x86_64.tar.gz");
 });
 
-test("without the processor, Windows gets x64 and a Mac Apple Silicon", () => {
+test("without the processor, Windows gets x64 and a Mac chooses", () => {
   assert.equal(file(UA.windowsFirefox), "horizon-launcher-setup.exe");
-  assert.equal(file(UA.macSafari), "horizon-launcher-macos-arm64.dmg");
+  assert.equal(file(UA.macSafari), null, "an Intel Mac can't open Apple Silicon's disk image");
   assert.equal(file(UA.linux), "horizon-launcher-linux-x86_64.tar.gz");
 });
 
@@ -55,6 +55,7 @@ test("phones, tablets and crawlers download nothing by themselves", () => {
   assert.equal(file(UA.android), null);
   assert.equal(file(UA.iphone), null);
   assert.equal(file(UA.macSafari, null, 5), null, "an iPad asking for the desktop site");
+  assert.equal(file(UA.linux, null, 5), null, "an Android tablet asking for the desktop site");
   assert.equal(file(UA.googlebot), null);
   assert.equal(file(UA.bingbot, "x86"), null);
   assert.equal(file(UA.headless, "x86"), null);

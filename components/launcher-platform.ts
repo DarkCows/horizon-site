@@ -40,7 +40,7 @@ export const megabytes = (bytes: number) => `${(bytes / 1e6).toFixed(1)} MB`;
 const CRAWLER = /bot|crawl|spider|slurp|headless|lighthouse/i;
 
 // The file /download starts by itself, or null when it should only offer the choices: crawlers, phones and tablets,
-// systems without a launcher (ARM Linux, ChromeOS) and anything unrecognised.
+// systems without a launcher (ARM Linux, ChromeOS), a Mac whose processor is unknown and anything unrecognised.
 export function autoDownload(
   build: LauncherBuild | null,
   userAgent: string,
@@ -49,7 +49,10 @@ export function autoDownload(
 ): { target: LauncherTarget; url: string; size: number } | null {
   if (!build || CRAWLER.test(userAgent)) return null;
   const os = desktopOs(userAgent, maxTouchPoints);
-  if (os === "linux" && (arch === "arm" || /aarch64|arm/i.test(userAgent) || /CrOS/.test(userAgent))) return null;
+  // An Android tablet asking for the desktop site says it is a Linux desktop; only its touch screen tells them apart.
+  if (os === "linux" && (maxTouchPoints > 0 || arch === "arm" || /aarch64|arm/i.test(userAgent) || /CrOS/.test(userAgent))) return null;
+  // Safari and Firefox don't name a Mac's processor, and the other processor's disk image doesn't open.
+  if (os === "macos" && arch === null) return null;
   const target = launcherTarget(os, arch);
   const file = target && build.files[target];
   return target && file ? { target, ...file } : null;
